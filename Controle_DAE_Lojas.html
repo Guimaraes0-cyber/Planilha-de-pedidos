@@ -1,0 +1,1039 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Controle de DAE</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,500;8..60,600;8..60,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<style>
+  :root{
+    --paper:#EDEDF3;
+    --paper-card:#FFFFFF;
+    --ink:#1B2436;
+    --ink-soft:#525C70;
+    --line:#D9DCE3;
+    --red:#A63B2E;
+    --red-bg:#F7E7E4;
+    --green:#2E6B4F;
+    --green-bg:#E4EFE9;
+    --amber:#B8863A;
+    --amber-bg:#F6EDDD;
+    --blue-accent:#2C3B5C;
+    --brand:#D6127D;
+    --brand-dark:#A80F65;
+    --brand-bg:#FCE8F3;
+    --store-igt:#D6127D;
+    --store-rm:#2F6FED;
+    --store-clz:#DB8A1F;
+    --radius:10px;
+    --shadow: 0 1px 2px rgba(27,36,54,0.06), 0 4px 14px rgba(27,36,54,0.06);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Inter',sans-serif;
+    min-height:100vh;
+  }
+  .mono{font-family:'IBM Plex Mono',monospace;}
+  #root{max-width:1180px;margin:0 auto;padding:28px 20px 60px;}
+
+  /* ---------- Header ---------- */
+  .app-header{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:22px;}
+  .wordmark-row{display:flex;align-items:center;gap:14px;}
+  .wordmark-badge{
+    width:46px;height:46px;border-radius:50%;
+    border:2px solid var(--brand);
+    display:flex;align-items:center;justify-content:center;
+    font-family:'Source Serif 4',serif;font-weight:700;font-size:16px;color:var(--brand);
+    flex-shrink:0;
+  }
+  .wordmark{font-family:'Source Serif 4',serif;font-weight:700;font-size:26px;letter-spacing:0.2px;margin:0;color:var(--brand-dark);}
+  .subtitle{color:var(--ink-soft);font-size:11.5px;margin-top:2px;letter-spacing:1px;text-transform:uppercase;}
+  .btn{
+    font-family:'Inter',sans-serif;font-weight:600;font-size:13.5px;
+    border:none;border-radius:8px;padding:10px 16px;cursor:pointer;
+    transition:transform .08s ease, box-shadow .15s ease;
+  }
+  .btn:active{transform:scale(0.97);}
+  .btn-primary{background:var(--brand);color:#fff;}
+  .btn-primary:hover{box-shadow:0 3px 10px rgba(214,18,125,0.35);}
+  .btn-ghost{background:transparent;color:var(--ink-soft);border:1px dashed var(--line);}
+  .btn-ghost:hover{border-color:var(--brand);color:var(--brand);}
+  .btn-danger{background:transparent;color:var(--red);}
+  .btn-danger:hover{text-decoration:underline;}
+  .btn-sm{padding:6px 10px;font-size:12.5px;border-radius:6px;}
+
+  /* ---------- Store nav cards ---------- */
+  .status-bar{
+    display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+    background:var(--paper-card);border-radius:var(--radius);box-shadow:var(--shadow);
+    padding:12px 18px;margin-bottom:16px;font-size:13px;
+  }
+  .status-dot{width:8px;height:8px;border-radius:50%;background:var(--green);display:inline-block;margin-right:6px;}
+  .pill{
+    display:inline-flex;align-items:center;gap:6px;border-radius:50px;padding:4px 12px;
+    font-size:12px;font-weight:600;border:1.5px solid currentColor;
+  }
+  .pill-dot{width:7px;height:7px;border-radius:50%;background:currentColor;}
+
+  .nav-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:26px;}
+  @media (max-width:820px){ .nav-grid{grid-template-columns:repeat(2,1fr);} }
+  .nav-card{
+    background:var(--paper-card);border-radius:12px;border:2px solid transparent;
+    box-shadow:var(--shadow);padding:20px 14px;text-align:center;cursor:pointer;
+    transition:all .15s ease;
+  }
+  .nav-card:hover{transform:translateY(-2px);}
+  .nav-card.active{background:#181818;border-color:var(--brand);box-shadow:0 4px 18px rgba(214,18,125,0.35);}
+  .nav-card.active .nav-card-label{color:#fff;}
+  .nav-card.active .nav-wordmark-intimissimi, .nav-card.active .nav-wordmark-calzedonia{color:#fff;}
+  .nav-card-icon{font-size:22px;margin-bottom:8px;}
+  .nav-card-label{font-size:12.5px;font-weight:600;color:var(--ink);margin-top:8px;}
+  .nav-wordmark-intimissimi{
+    font-family:'Inter',sans-serif;font-weight:300;font-size:16px;letter-spacing:3px;
+    text-transform:lowercase;color:var(--ink);height:22px;display:flex;align-items:center;justify-content:center;
+  }
+  .nav-wordmark-calzedonia{
+    font-family:'Inter',sans-serif;font-weight:800;font-size:14px;letter-spacing:0.5px;
+    text-transform:uppercase;color:var(--ink);height:22px;display:flex;align-items:center;justify-content:center;
+  }
+
+  /* ---------- Login screen ---------- */
+  .auth-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;}
+  .auth-card{
+    background:var(--paper-card);border-radius:16px;box-shadow:0 20px 60px rgba(27,36,54,0.15);
+    padding:38px 34px;max-width:380px;width:100%;text-align:center;
+  }
+  .auth-badge{
+    width:56px;height:56px;border-radius:50%;background:var(--brand-bg);color:var(--brand-dark);
+    display:flex;align-items:center;justify-content:center;margin:0 auto 16px;
+    font-family:'Source Serif 4',serif;font-weight:700;font-size:19px;
+  }
+  .auth-title{font-family:'Source Serif 4',serif;font-weight:700;font-size:21px;color:var(--brand-dark);margin:0 0 4px;}
+  .auth-sub{color:var(--ink-soft);font-size:13px;margin:0 0 24px;}
+  .auth-field{text-align:left;margin-bottom:14px;}
+  .auth-field label{font-size:12px;font-weight:600;color:var(--ink-soft);display:block;margin-bottom:4px;}
+  .auth-field input{width:100%;padding:10px 12px;font-size:14px;border-radius:8px;border:1px solid var(--line);}
+  .auth-error{color:var(--red);font-size:12.5px;margin:-6px 0 12px;text-align:left;}
+  .auth-note{font-size:11px;color:var(--ink-soft);margin-top:18px;line-height:1.5;}
+  .auth-link{background:none;border:none;color:var(--brand);font-size:12.5px;font-weight:600;cursor:pointer;margin-top:10px;text-decoration:underline;}
+
+  /* ---------- Cards / Stamp ---------- */
+  .card{
+    background:var(--paper-card);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    padding:20px 22px;
+  }
+  .store-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:22px;}
+  @media (max-width:820px){ .store-grid{grid-template-columns:1fr;} }
+  .store-card{transition:box-shadow .15s ease;}
+  .store-card:hover{box-shadow:0 2px 6px rgba(27,36,54,0.1), 0 8px 20px rgba(27,36,54,0.1);}
+  .store-card-top{display:flex;justify-content:space-between;align-items:flex-start;}
+  .store-name{font-family:'Source Serif 4',serif;font-weight:600;font-size:19px;margin:0 0 2px;}
+  .store-loja-code{color:var(--ink-soft);font-size:12px;letter-spacing:0.6px;text-transform:uppercase;}
+  .store-total{font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:26px;margin:14px 0 4px;}
+  .store-total-label{color:var(--ink-soft);font-size:12px;}
+  .store-next{margin-top:14px;padding-top:12px;border-top:1px dashed var(--line);font-size:12.5px;color:var(--ink-soft);}
+  .store-next b{color:var(--ink);}
+
+  .stamp{
+    display:inline-flex;align-items:center;justify-content:center;
+    font-family:'Source Serif 4',serif;font-weight:700;font-size:10px;letter-spacing:0.8px;
+    text-transform:uppercase;border-radius:50px;padding:4px 10px;
+    border:1.5px solid currentColor;transform:rotate(-3deg);white-space:nowrap;
+  }
+  .stamp-pago{color:var(--green);background:var(--green-bg);}
+  .stamp-vencido{color:var(--red);background:var(--red-bg);}
+  .stamp-urgente{color:var(--amber);background:var(--amber-bg);}
+  .stamp-pendente{color:var(--ink-soft);background:#EEF0F3;}
+
+  .summary-bar{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:22px;}
+  .summary-chip{
+    background:var(--paper-card);border-radius:var(--radius);box-shadow:var(--shadow);
+    padding:14px 20px;flex:1;min-width:180px;
+  }
+  .summary-chip-label{font-size:12px;color:var(--ink-soft);margin-bottom:6px;}
+  .summary-chip-value{font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:20px;}
+  .summary-chip-value.red{color:var(--red);}
+  .summary-chip-value.green{color:var(--green);}
+
+  .section-title{font-family:'Source Serif 4',serif;font-weight:600;font-size:16px;margin:0 0 12px;}
+
+  /* ---------- Table ---------- */
+  .table-wrap{overflow-x:auto;background:var(--paper-card);border-radius:var(--radius);box-shadow:var(--shadow);}
+  table{width:100%;border-collapse:collapse;font-size:13px;min-width:760px;}
+  table.table-detailed{min-width:1520px;}
+  thead th{
+    text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;
+    color:var(--ink-soft);font-weight:600;padding:12px 14px;border-bottom:1px solid var(--line);
+    white-space:nowrap;
+  }
+  tbody td{padding:11px 14px;border-bottom:1px solid #EEF0F3;vertical-align:middle;white-space:nowrap;}
+  tbody tr:last-child td{border-bottom:none;}
+  tbody tr:hover{background:#FAFBFC;}
+  .num{font-family:'IBM Plex Mono',monospace;}
+  .muted{color:var(--ink-soft);}
+  .empty-state{padding:48px 20px;text-align:center;color:var(--ink-soft);}
+  .empty-state b{color:var(--ink);display:block;font-size:15px;margin-bottom:4px;font-family:'Source Serif 4',serif;}
+
+  .row-actions{display:flex;gap:6px;}
+
+  .toolbar{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:14px;}
+  .filter-group{display:flex;gap:6px;}
+  select, input[type=text], input[type=number], input[type=date], textarea{
+    font-family:'Inter',sans-serif;font-size:13.5px;padding:8px 10px;border-radius:7px;
+    border:1px solid var(--line);background:#fff;color:var(--ink);
+  }
+  select:focus, input:focus, textarea:focus{outline:2px solid var(--blue-accent);outline-offset:1px;}
+
+  /* ---------- Modal ---------- */
+  .overlay{
+    position:fixed;inset:0;background:rgba(27,36,54,0.45);
+    display:none;align-items:flex-start;justify-content:center;
+    padding:40px 16px;overflow-y:auto;z-index:50;
+  }
+  .overlay.open{display:flex;}
+  .modal{
+    background:#fff;border-radius:14px;max-width:560px;width:100%;
+    padding:26px 28px 24px;box-shadow:0 20px 60px rgba(0,0,0,0.25);
+  }
+  .modal-title{font-family:'Source Serif 4',serif;font-weight:600;font-size:19px;margin:0 0 4px;}
+  .modal-sub{color:var(--ink-soft);font-size:13px;margin:0 0 18px;}
+  .modal-lg{max-width:960px;}
+  .dropzone{
+    border:1.5px dashed var(--line);border-radius:10px;padding:28px 20px;text-align:center;
+    color:var(--ink-soft);font-size:13.5px;cursor:pointer;transition:border-color .15s ease, background .15s ease;
+  }
+  .dropzone:hover, .dropzone.drag{border-color:var(--blue-accent);background:#F5F7FA;}
+  .dropzone b{color:var(--ink);display:block;font-family:'Source Serif 4',serif;font-size:15px;margin-bottom:4px;}
+  .import-table-wrap{max-height:360px;overflow:auto;border:1px solid var(--line);border-radius:8px;margin-top:16px;}
+  .import-table{width:100%;border-collapse:collapse;font-size:12.5px;min-width:760px;}
+  .import-table th{position:sticky;top:0;background:#F5F6F8;text-align:left;padding:8px 10px;font-size:10.5px;text-transform:uppercase;color:var(--ink-soft);border-bottom:1px solid var(--line);white-space:nowrap;}
+  .import-table td{padding:6px 8px;border-bottom:1px solid #EEF0F3;vertical-align:middle;}
+  .import-table input, .import-table select{width:100%;padding:5px 6px;font-size:12.5px;border-radius:5px;}
+  .import-note{font-size:11.5px;color:var(--ink-soft);margin-top:6px;}
+  .badge-auto{font-size:10px;color:var(--green);font-weight:600;}
+  .badge-manual{font-size:10px;color:var(--amber);font-weight:600;}
+  .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px 14px;}
+  .form-grid.full{grid-template-columns:1fr;}
+  .field{display:flex;flex-direction:column;gap:4px;}
+  .field.span-2{grid-column:1/-1;}
+  .field label{font-size:12px;font-weight:600;color:var(--ink-soft);}
+  .field .hint{font-size:11px;color:var(--ink-soft);font-weight:400;}
+  .modal-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:20px;}
+
+  .loading-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:70vh;color:var(--ink-soft);gap:10px;}
+  .spinner{width:26px;height:26px;border-radius:50%;border:3px solid var(--line);border-top-color:var(--blue-accent);animation:spin 0.8s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+
+  @media (max-width:560px){
+    .form-grid{grid-template-columns:1fr;}
+    table{min-width:640px;}
+  }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<div class="overlay" id="overlay">
+  <div class="modal" id="modalBody"></div>
+</div>
+
+<script>
+const STORE_META = {
+  RM:  { nome:'Intimissimi Riomar',      shopping:'Shopping RioMar',   brand:'intimissimi', color:'var(--store-rm)' },
+  IGT: { nome:'Intimissimi Iguatemi',    shopping:'Shopping Iguatemi', brand:'intimissimi', color:'var(--store-igt)' },
+  CLZ: { nome:'Calzedonia Via Bosque',   shopping:'Shopping Via Bosque', brand:'calzedonia', color:'var(--store-clz)' }
+};
+const STORE_KEYS = ['RM','IGT','CLZ'];
+const DAE_RATE = 0.16;
+
+let state = {
+  unlocked:false,
+  authError:'',
+  loaded:false,
+  activeTab:'overview',
+  pedidos:{ RM:[], IGT:[], CLZ:[] },
+  filters:{ RM:'todos', IGT:'todos', CLZ:'todos' },
+  search:{ RM:'', IGT:'', CLZ:'' }
+};
+
+const AUTH_USER = 'raysse';
+const AUTH_PASS = '1234';
+
+// ---------- auth ----------
+async function handleLogin(ev){
+  ev.preventDefault();
+  const f = ev.target.elements;
+  const user = f.usuario.value.trim().toLowerCase();
+  const pass = f.senha.value;
+  if(user === AUTH_USER && pass === AUTH_PASS){
+    state.unlocked = true;
+    state.authError = '';
+    render();
+    await loadAll();
+    render();
+  } else {
+    state.authError = 'Usuário ou senha incorretos.';
+    render();
+  }
+  return false;
+}
+
+// ---------- storage helpers ----------
+async function loadAll(){
+  for(const code of STORE_KEYS){
+    try{
+      const res = await window.storage.get('pedidos-'+code, false);
+      state.pedidos[code] = res && res.value ? JSON.parse(res.value) : [];
+    }catch(e){
+      state.pedidos[code] = [];
+    }
+  }
+  state.loaded = true;
+}
+async function saveStore(code){
+  try{
+    const ok = await window.storage.set('pedidos-'+code, JSON.stringify(state.pedidos[code]), false);
+    if(!ok) console.error('Falha ao salvar', code);
+  }catch(e){
+    console.error('Erro de storage', e);
+  }
+}
+
+// ---------- utils ----------
+function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,8); }
+function todayISO(){ return new Date().toISOString().slice(0,10); }
+function fmtBRL(n){
+  n = Number(n)||0;
+  return n.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+}
+function fmtDateBR(iso){
+  if(!iso) return '—';
+  const [y,m,d] = iso.split('-');
+  return d+'/'+m+'/'+y;
+}
+function daysUntil(iso){
+  if(!iso) return null;
+  const target = new Date(iso+'T00:00:00');
+  const now = new Date(todayISO()+'T00:00:00');
+  return Math.round((target-now)/86400000);
+}
+function statusFor(p){
+  if(p.status === 'pago') return 'pago';
+  if(!p.vencimento) return 'pendente';
+  const d = daysUntil(p.vencimento);
+  if(d < 0) return 'vencido';
+  if(d <= 7) return 'urgente';
+  return 'pendente';
+}
+function stampLabel(s){
+  return { pago:'Pago', vencido:'Vencido', urgente:'Vencendo', pendente:'Pendente' }[s];
+}
+function selagemStatus(p){
+  if(p.status !== 'pago') return 'aguardando';
+  const diff = (Number(p.valorDae)||0) - (Number(p.valorPago)||0);
+  return Math.abs(diff) < 1 ? 'ok' : 'erro';
+}
+function selagemLabel(s){
+  return { ok:'OK', erro:'Precisa selagem', aguardando:'Aguardando pgto.' }[s];
+}
+function selagemClass(s){
+  return { ok:'stamp-pago', erro:'stamp-vencido', aguardando:'stamp-pendente' }[s];
+}
+function selagemDiff(p){
+  if(p.status !== 'pago') return null;
+  return (Number(p.valorDae)||0) - (Number(p.valorPago)||0);
+}
+function esc(str){
+  return (str==null?'':String(str)).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+// ---------- computed ----------
+function storeStats(code){
+  const list = state.pedidos[code];
+  const pendentes = list.filter(p=>p.status!=='pago');
+  const totalPendente = pendentes.reduce((s,p)=>s+(Number(p.valorDae)||0),0);
+  const thisMonth = todayISO().slice(0,7);
+  const totalPagoMes = list.filter(p=>p.status==='pago' && p.dataPagamento && p.dataPagamento.slice(0,7)===thisMonth)
+                            .reduce((s,p)=>s+(Number(p.valorPago ?? p.valorDae)||0),0);
+  const proximos = pendentes.filter(p=>p.vencimento).sort((a,b)=>a.vencimento.localeCompare(b.vencimento));
+  const comErro = list.filter(p=>selagemStatus(p)==='erro');
+  return { totalPendente, totalPagoMes, proximo: proximos[0]||null, countPendente: pendentes.length, comErro };
+}
+function allPendentesOrdenados(){
+  let all = [];
+  STORE_KEYS.forEach(code=>{
+    state.pedidos[code].filter(p=>p.status!=='pago' && p.vencimento).forEach(p=>{
+      all.push(Object.assign({}, p, {_loja:code}));
+    });
+  });
+  all.sort((a,b)=>a.vencimento.localeCompare(b.vencimento));
+  return all;
+}
+
+// ---------- render ----------
+function render(){
+  const root = document.getElementById('root');
+  if(!state.unlocked){
+    root.innerHTML = renderAuthScreen();
+    return;
+  }
+  if(!state.loaded){
+    root.innerHTML = `<div class="loading-screen"><div class="spinner"></div><div>Carregando dados…</div></div>`;
+    return;
+  }
+  root.innerHTML = renderHeader() + renderStatusBar() + renderNavCards() +
+    (state.activeTab==='overview' ? renderOverview() : renderStoreView(state.activeTab));
+}
+
+function renderAuthScreen(){
+  return `
+  <div class="auth-wrap"><div class="auth-card">
+    <div class="auth-badge">DAE</div>
+    <p class="auth-title">Intimissimi &amp; Calzedonia</p>
+    <p class="auth-sub">Controle de pedidos e DAE &middot; 3 lojas</p>
+    <form onsubmit="return handleLogin(event)">
+      <div class="auth-field"><label>Usuário</label><input type="text" name="usuario" autocomplete="username" required autofocus></div>
+      <div class="auth-field"><label>Senha</label><input type="password" name="senha" autocomplete="current-password" required></div>
+      ${state.authError ? `<div class="auth-error">${esc(state.authError)}</div>` : ''}
+      <button type="submit" class="btn btn-primary" style="width:100%;padding:12px;">Entrar</button>
+    </form>
+  </div></div>`;
+}
+
+function renderHeader(){
+  return `
+  <div class="app-header">
+    <div class="wordmark-row">
+      <div class="wordmark-badge">DAE</div>
+      <div>
+        <p class="wordmark">Intimissimi &amp; Calzedonia</p>
+        <div class="subtitle">Controle de pedidos &middot; 3 lojas</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;">
+      <button class="btn btn-ghost" onclick="openImportModal()">&#128194; Importar PDF (DANFE)</button>
+      <button class="btn btn-primary" onclick="openPedidoModal()">+ Novo pedido / NF</button>
+    </div>
+  </div>`;
+}
+
+function renderStatusBar(){
+  const total = STORE_KEYS.reduce((s,c)=>s+state.pedidos[c].length,0);
+  const pills = STORE_KEYS.map(c=>
+    `<span class="pill" style="color:${STORE_META[c].color};"><span class="pill-dot"></span>${STORE_META[c].nome.split(' ').slice(1).join(' ')||STORE_META[c].nome}</span>`
+  ).join('');
+  return `
+  <div class="status-bar">
+    <span><span class="status-dot"></span><b>${total.toLocaleString('pt-BR')}</b> registro(s) carregado(s)</span>
+    <span style="color:var(--line);">|</span>
+    ${pills}
+  </div>`;
+}
+
+function wordmarkFor(code){
+  const meta = STORE_META[code];
+  if(meta.brand === 'intimissimi'){
+    return `<div class="nav-wordmark-intimissimi">intimissimi</div>`;
+  }
+  return `<div class="nav-wordmark-calzedonia">CALZEDONIA</div>`;
+}
+
+function renderNavCards(){
+  const cards = [`
+    <div class="nav-card ${state.activeTab==='overview'?'active':''}" onclick="switchTab('overview')">
+      <div class="nav-card-icon">&#127970;</div>
+      <div class="nav-card-label">Todas as Lojas</div>
+    </div>`].concat(STORE_KEYS.map(code=>{
+    const meta = STORE_META[code];
+    return `
+    <div class="nav-card ${state.activeTab===code?'active':''}" onclick="switchTab('${code}')">
+      ${wordmarkFor(code)}
+      <div class="nav-card-label">${meta.shopping}</div>
+    </div>`;
+  }));
+  return `<div class="nav-grid">${cards.join('')}</div>`;
+}
+
+function renderOverview(){
+  let globalPendente = 0, globalPagoMes = 0, globalErro = [];
+  const cards = STORE_KEYS.map(code=>{
+    const s = storeStats(code);
+    globalPendente += s.totalPendente;
+    globalPagoMes += s.totalPagoMes;
+    s.comErro.forEach(p=>globalErro.push(Object.assign({}, p, {_loja:code})));
+    const nextTxt = s.proximo
+      ? `<b>${fmtDateBR(s.proximo.vencimento)}</b> · NF ${esc(s.proximo.nfNumero||'—')} <span class="stamp stamp-${statusFor(s.proximo)}" style="margin-left:6px;">${stampLabel(statusFor(s.proximo))}</span>`
+      : 'Nenhum vencimento pendente';
+    return `
+    <div class="card store-card" style="border-left:4px solid ${STORE_META[code].color};">
+      <div class="store-card-top">
+        <div>
+          <p class="store-name">${STORE_META[code].nome}</p>
+          <div class="store-loja-code">${code} · ${s.countPendente} pendente(s)${s.comErro.length ? ' · '+s.comErro.length+' p/ selagem' : ''}</div>
+        </div>
+      </div>
+      <div class="store-total">${fmtBRL(s.totalPendente)}</div>
+      <div class="store-total-label">total de DAE pendente</div>
+      <div class="store-next">Próximo vencimento: ${nextTxt}</div>
+    </div>`;
+  }).join('');
+
+  const proximos = allPendentesOrdenados().slice(0,10);
+  const tableRows = proximos.length ? proximos.map(p=>{
+    const st = statusFor(p);
+    return `<tr>
+      <td>${STORE_META[p._loja].nome}</td>
+      <td>${esc(p.nfNumero)||'—'}</td>
+      <td>${esc(p.pedido)||'—'}</td>
+      <td class="num">${fmtBRL(p.valorDae)}</td>
+      <td>${fmtDateBR(p.vencimento)}</td>
+      <td><span class="stamp stamp-${st}">${stampLabel(st)}</span></td>
+      <td class="row-actions">
+        <button class="btn btn-ghost btn-sm" onclick="openPagarModal('${p._loja}','${p.id}')">Marcar pago</button>
+      </td>
+    </tr>`;
+  }).join('') : `<tr><td colspan="7"><div class="empty-state"><b>Nenhum vencimento em aberto</b>Tudo pago ou nada lançado ainda.</div></td></tr>`;
+
+  const erroRows = globalErro.length ? globalErro.map(p=>{
+    const diff = selagemDiff(p);
+    return `<tr>
+      <td>${STORE_META[p._loja].nome}</td>
+      <td>${esc(p.nfNumero)||'—'}</td>
+      <td>${esc(p.pedido)||'—'}</td>
+      <td class="num">${fmtBRL(p.valorDae)}</td>
+      <td class="num">${fmtBRL(p.valorPago)}</td>
+      <td class="num">${fmtBRL(diff)}</td>
+      <td><span class="stamp stamp-vencido">Precisa selagem</span></td>
+    </tr>`;
+  }).join('') : '';
+
+  return `
+  <p class="section-title">Indicadores Gerais</p>
+  <div class="store-grid">${cards}</div>
+  <div class="summary-bar">
+    <div class="summary-chip">
+      <div class="summary-chip-label">Total geral pendente (3 lojas)</div>
+      <div class="summary-chip-value red">${fmtBRL(globalPendente)}</div>
+    </div>
+    <div class="summary-chip">
+      <div class="summary-chip-label">Pago neste mês (3 lojas)</div>
+      <div class="summary-chip-value green">${fmtBRL(globalPagoMes)}</div>
+    </div>
+    <div class="summary-chip">
+      <div class="summary-chip-label">Notas que precisam de selagem</div>
+      <div class="summary-chip-value ${globalErro.length?'red':''}">${globalErro.length}</div>
+    </div>
+  </div>
+  ${globalErro.length ? `
+  <p class="section-title">Notas com diferença no DAE (conferir selagem)</p>
+  <div class="table-wrap" style="margin-bottom:22px;">
+    <table>
+      <thead><tr><th>Loja</th><th>NF</th><th>Pedido</th><th>DAE esperado</th><th>DAE pago</th><th>Diferença</th><th>Status</th></tr></thead>
+      <tbody>${erroRows}</tbody>
+    </table>
+  </div>` : ''}
+  <p class="section-title">Próximos vencimentos</p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Loja</th><th>NF</th><th>Pedido</th><th>Valor DAE</th><th>Vencimento</th><th>Status</th><th></th></tr></thead>
+      <tbody>${tableRows}</tbody>
+    </table>
+  </div>`;
+}
+
+function renderStoreView(code){
+  const meta = STORE_META[code];
+  const s = storeStats(code);
+  const filter = state.filters[code];
+  const search = state.search[code].toLowerCase();
+
+  let list = state.pedidos[code].slice().sort((a,b)=> (b.data||'').localeCompare(a.data||''));
+  if(filter!=='todos'){
+    list = list.filter(p=> {
+      if(filter==='pago') return p.status==='pago';
+      if(filter==='selagem') return selagemStatus(p)==='erro';
+      return statusFor(p)===filter;
+    });
+  }
+  if(search){
+    list = list.filter(p=> (p.pedido||'').toLowerCase().includes(search) || (p.nfNumero||'').toLowerCase().includes(search));
+  }
+
+  const rows = list.length ? list.map(p=>{
+    const st = statusFor(p);
+    const sel = selagemStatus(p);
+    const diff = selagemDiff(p);
+    return `<tr>
+      <td>${fmtDateBR(p.data)}</td>
+      <td>${esc(p.pedido)||'—'}</td>
+      <td class="muted">${esc(p.nfNumero)||'—'}</td>
+      <td class="num">${p.qt!=null?p.qt:'—'}</td>
+      <td class="num">${p.valor!=null?fmtBRL(p.valor):'—'}</td>
+      <td class="num">${p.qtFaturado!=null?p.qtFaturado:'—'}</td>
+      <td class="num">${fmtBRL(p.valorFaturado)}</td>
+      <td>${fmtDateBR(p.previsaoEntrega)}</td>
+      <td>${fmtDateBR(p.recebimento)}</td>
+      <td>${fmtDateBR(p.vencimento)}</td>
+      <td class="num">${fmtBRL(p.valorDae)}</td>
+      <td class="num">${p.status==='pago'?fmtBRL(p.valorPago):'—'}</td>
+      <td class="num">${diff!=null?fmtBRL(diff):'—'}</td>
+      <td><span class="stamp ${selagemClass(sel)}">${selagemLabel(sel)}</span></td>
+      <td><span class="stamp stamp-${st}">${stampLabel(st)}</span></td>
+      <td class="muted">${esc(p.observacoes)||'—'}</td>
+      <td class="row-actions">
+        ${st!=='pago' ? `<button class="btn btn-ghost btn-sm" onclick="openPagarModal('${code}','${p.id}')">Pagar</button>` : ''}
+        <button class="btn btn-ghost btn-sm" onclick="openPedidoModal('${code}','${p.id}')">Editar</button>
+        <button class="btn btn-danger btn-sm" onclick="deletePedido('${code}','${p.id}')">Excluir</button>
+      </td>
+    </tr>`;
+  }).join('') : `<tr><td colspan="17"><div class="empty-state"><b>Nenhum pedido aqui ainda</b>Lance o primeiro pedido/NF desta loja com o botão "Novo pedido / NF".</div></td></tr>`;
+
+  return `
+  <div class="summary-bar">
+    <div class="summary-chip">
+      <div class="summary-chip-label">DAE pendente — ${meta.nome}</div>
+      <div class="summary-chip-value red">${fmtBRL(s.totalPendente)}</div>
+    </div>
+    <div class="summary-chip">
+      <div class="summary-chip-label">Pago neste mês</div>
+      <div class="summary-chip-value green">${fmtBRL(s.totalPagoMes)}</div>
+    </div>
+    <div class="summary-chip">
+      <div class="summary-chip-label">Próximo vencimento</div>
+      <div class="summary-chip-value">${s.proximo ? fmtDateBR(s.proximo.vencimento) : '—'}</div>
+    </div>
+    <div class="summary-chip">
+      <div class="summary-chip-label">Notas que precisam de selagem</div>
+      <div class="summary-chip-value ${s.comErro.length?'red':''}">${s.comErro.length}</div>
+    </div>
+  </div>
+  <div class="toolbar">
+    <div class="filter-group">
+      <select onchange="setFilter('${code}', this.value)">
+        <option value="todos" ${filter==='todos'?'selected':''}>Todos os status</option>
+        <option value="pendente" ${filter==='pendente'?'selected':''}>Pendente</option>
+        <option value="urgente" ${filter==='urgente'?'selected':''}>Vencendo (7 dias)</option>
+        <option value="vencido" ${filter==='vencido'?'selected':''}>Vencido</option>
+        <option value="pago" ${filter==='pago'?'selected':''}>Pago</option>
+        <option value="selagem" ${filter==='selagem'?'selected':''}>Precisa selagem</option>
+      </select>
+      <input type="text" placeholder="Buscar por pedido ou NF" value="${esc(state.search[code])}" oninput="setSearch('${code}', this.value)">
+    </div>
+  </div>
+  <div class="table-wrap">
+    <table class="table-detailed">
+      <thead><tr>
+        <th>Data</th><th>Pedido</th><th>NF</th><th>QT ped.</th><th>Valor ped.</th><th>QT fat.</th><th>Valor fat.</th>
+        <th>Previsão</th><th>Recebim.</th><th>Venc. DAE</th><th>DAE esperado</th><th>DAE pago</th><th>Diferença</th>
+        <th>Selagem</th><th>Pagamento</th><th>Obs.</th><th></th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+  </div>`;
+}
+
+// ---------- tab / filter actions ----------
+function switchTab(id){ state.activeTab = id; render(); }
+function setFilter(code, val){ state.filters[code]=val; render(); }
+function setSearch(code, val){ state.search[code]=val; render(); }
+
+// ---------- pedido modal ----------
+function openPedidoModal(codePreset, editId){
+  const editing = codePreset && editId ? state.pedidos[codePreset].find(p=>p.id===editId) : null;
+  const currentStore = codePreset || (STORE_KEYS.includes(state.activeTab) ? state.activeTab : STORE_KEYS[0]);
+  const overlay = document.getElementById('overlay');
+  const modalBody = document.getElementById('modalBody');
+  modalBody.className = 'modal';
+  modalBody.innerHTML = `
+    <p class="modal-title">${editing?'Editar pedido':'Novo pedido / NF'}</p>
+    <p class="modal-sub">Preencha com os dados da nota fiscal baixada.</p>
+    <form id="pedidoForm" onsubmit="return submitPedido(event, '${editing?editing.id:''}')">
+      <div class="form-grid">
+        <div class="field">
+          <label>Loja</label>
+          <select name="loja" ${editing?'disabled':''}>
+            ${STORE_KEYS.map(c=>`<option value="${c}" ${currentStore===c?'selected':''}>${STORE_META[c].nome}</option>`).join('')}
+          </select>
+        </div>
+        <div class="field">
+          <label>Data</label>
+          <input type="date" name="data" value="${editing?editing.data:todayISO()}" required>
+        </div>
+        <div class="field span-2">
+          <label>Pedido / descrição</label>
+          <input type="text" name="pedido" value="${editing?esc(editing.pedido):''}" placeholder="Ex: Ressuprimento semanal / 215733, Brinde, Sem pedido de venda..." required>
+        </div>
+        <div class="field">
+          <label>Nº NF</label>
+          <input type="text" name="nfNumero" value="${editing?esc(editing.nfNumero):''}">
+        </div>
+        <div class="field"></div>
+        <div class="field">
+          <label>QT pedida</label>
+          <input type="number" step="1" name="qt" value="${editing&&editing.qt!=null?editing.qt:''}" placeholder="Deixe em branco se não houve pedido">
+        </div>
+        <div class="field">
+          <label>Valor pedido (R$)</label>
+          <input type="number" step="0.01" name="valor" value="${editing&&editing.valor!=null?editing.valor:''}">
+        </div>
+        <div class="field">
+          <label>QT faturada</label>
+          <input type="number" step="1" name="qtFaturado" value="${editing&&editing.qtFaturado!=null?editing.qtFaturado:''}">
+        </div>
+        <div class="field">
+          <label>Valor faturado (R$)</label>
+          <input type="number" step="0.01" name="valorFaturado" id="valorFaturadoInput" value="${editing?editing.valorFaturado:''}" oninput="autoCalcDae()" required>
+        </div>
+        <div class="field">
+          <label>Previsão de entrega</label>
+          <input type="date" name="previsaoEntrega" value="${editing&&editing.previsaoEntrega?editing.previsaoEntrega:''}">
+        </div>
+        <div class="field">
+          <label>Recebimento</label>
+          <input type="date" name="recebimento" value="${editing&&editing.recebimento?editing.recebimento:''}">
+        </div>
+        <div class="field">
+          <label>Vencimento do DAE</label>
+          <input type="date" name="vencimento" value="${editing&&editing.vencimento?editing.vencimento:''}">
+        </div>
+        <div class="field">
+          <label>Valor do DAE esperado (R$)</label>
+          <input type="number" step="0.01" name="valorDae" id="valorDaeInput" value="${editing?editing.valorDae:''}">
+          <span class="hint">Sugestão automática: 16% do valor faturado. Ajuste se for diferente.</span>
+        </div>
+        <div class="field span-2">
+          <label>Observações / descontos em nota</label>
+          <input type="text" name="observacoes" value="${editing?esc(editing.observacoes):''}">
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
+        <button type="submit" class="btn btn-primary">${editing?'Salvar alterações':'Adicionar pedido'}</button>
+      </div>
+    </form>
+  `;
+  overlay.classList.add('open');
+}
+function autoCalcDae(){
+  const vf = parseFloat(document.getElementById('valorFaturadoInput').value)||0;
+  const daeInput = document.getElementById('valorDaeInput');
+  if(!daeInput.dataset.touched){
+    daeInput.value = (vf*DAE_RATE).toFixed(2);
+  }
+}
+function submitPedido(ev, editId){
+  ev.preventDefault();
+  const f = ev.target.elements;
+  const code = f.loja.value;
+  const record = {
+    id: editId || uid(),
+    loja: code,
+    data: f.data.value,
+    pedido: f.pedido.value.trim(),
+    nfNumero: f.nfNumero.value.trim(),
+    qt: f.qt.value!=='' ? parseFloat(f.qt.value) : null,
+    valor: f.valor.value!=='' ? parseFloat(f.valor.value) : null,
+    qtFaturado: f.qtFaturado.value!=='' ? parseFloat(f.qtFaturado.value) : null,
+    valorFaturado: parseFloat(f.valorFaturado.value)||0,
+    valorDae: parseFloat(f.valorDae.value)|| Number(((parseFloat(f.valorFaturado.value)||0)*DAE_RATE).toFixed(2)),
+    vencimento: f.vencimento.value || null,
+    previsaoEntrega: f.previsaoEntrega.value || null,
+    recebimento: f.recebimento.value || null,
+    observacoes: f.observacoes.value.trim(),
+    status: 'pendente',
+    dataPagamento: null,
+    valorPago: null
+  };
+  if(editId){
+    const idx = state.pedidos[code].findIndex(p=>p.id===editId);
+    record.status = state.pedidos[code][idx].status;
+    record.dataPagamento = state.pedidos[code][idx].dataPagamento;
+    record.valorPago = state.pedidos[code][idx].valorPago;
+    state.pedidos[code][idx] = record;
+  } else {
+    state.pedidos[code].push(record);
+  }
+  saveStore(code);
+  closeModal();
+  if(state.activeTab==='overview') { /* stay */ } else { state.activeTab = code; }
+  render();
+  return false;
+}
+function deletePedido(code, id){
+  if(!confirm('Excluir este pedido? Essa ação não pode ser desfeita.')) return;
+  state.pedidos[code] = state.pedidos[code].filter(p=>p.id!==id);
+  saveStore(code);
+  render();
+}
+
+// ---------- pagar modal ----------
+function openPagarModal(code, id){
+  const p = state.pedidos[code].find(x=>x.id===id);
+  if(!p) return;
+  const modalBody = document.getElementById('modalBody');
+  modalBody.className = 'modal';
+  modalBody.innerHTML = `
+    <p class="modal-title">Marcar DAE como pago</p>
+    <p class="modal-sub">${STORE_META[code].nome} · NF ${esc(p.nfNumero)||'—'} · ${esc(p.pedido)}</p>
+    <form onsubmit="return submitPagamento(event, '${code}', '${id}')">
+      <div class="form-grid">
+        <div class="field">
+          <label>Data do pagamento</label>
+          <input type="date" name="dataPagamento" value="${todayISO()}" required>
+        </div>
+        <div class="field">
+          <label>Valor pago (R$)</label>
+          <input type="number" step="0.01" name="valorPago" value="${p.valorDae}" required>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
+        <button type="submit" class="btn btn-primary">Confirmar pagamento</button>
+      </div>
+    </form>
+  `;
+  document.getElementById('overlay').classList.add('open');
+}
+function submitPagamento(ev, code, id){
+  ev.preventDefault();
+  const f = ev.target.elements;
+  const idx = state.pedidos[code].findIndex(p=>p.id===id);
+  if(idx>-1){
+    state.pedidos[code][idx].status = 'pago';
+    state.pedidos[code][idx].dataPagamento = f.dataPagamento.value;
+    state.pedidos[code][idx].valorPago = parseFloat(f.valorPago.value)||0;
+    saveStore(code);
+  }
+  closeModal();
+  render();
+  return false;
+}
+
+function closeModal(){ document.getElementById('overlay').classList.remove('open'); }
+document.getElementById('overlay').addEventListener('click', e=>{
+  if(e.target.id==='overlay') closeModal();
+});
+
+// ============================================================
+// ---------- Importação de PDF (DANFE) ----------
+// ============================================================
+let importPreview = []; // { _uid, loja, lojaAuto, data, dataAuto, pedido, nfNumero, nfAuto, valorFaturado, valorAuto, fileName, warn }
+
+function detectLoja(text){
+  const up = text.toUpperCase();
+  if(up.includes('RIOMAR')) return 'RM';
+  if(up.includes('IGUATEMI')) return 'IGT';
+  if(up.includes('CALZEDONIA') || up.includes('VIA BOSQUE')) return 'CLZ';
+  return null;
+}
+
+function decodeChave(text){
+  // procura uma sequência de 44 dígitos (a chave de acesso da NF-e), com ou sem espaços
+  let chave = null;
+  const blocks = text.match(/[\d\s.]{44,90}/g) || [];
+  for(const b of blocks){
+    const digits = b.replace(/\D/g,'');
+    const m = digits.match(/\d{44}/);
+    if(m){ chave = m[0]; break; }
+  }
+  if(!chave){
+    const direct = text.match(/\d{44}/);
+    if(direct) chave = direct[0];
+  }
+  if(!chave) return null;
+  const aa = chave.slice(2,4), mm = chave.slice(4,6);
+  const nNF = parseInt(chave.slice(25,34), 10);
+  const serie = parseInt(chave.slice(22,25), 10);
+  return {
+    nNF: isNaN(nNF) ? null : String(nNF),
+    serie: isNaN(serie) ? null : serie,
+    anoMes: '20'+aa+'-'+mm
+  };
+}
+
+function guessDataEmissao(text, anoMesFallback){
+  const dates = text.match(/\d{2}\/\d{2}\/\d{4}/g);
+  if(dates && dates.length){
+    const [d,m,y] = dates[0].split('/');
+    return y+'-'+m+'-'+d;
+  }
+  if(anoMesFallback) return anoMesFallback+'-01';
+  return null;
+}
+
+function guessValorTotal(text){
+  const nums = text.match(/\d{1,3}(?:\.\d{3})*,\d{2}/g);
+  if(!nums || !nums.length) return null;
+  const parsed = nums.map(n => parseFloat(n.replace(/\./g,'').replace(',','.')));
+  return Math.max(...parsed);
+}
+
+function guessNfNumero(text){
+  const m = text.match(/N[ºo°]?\s*[:\.]?\s*(\d[\d\.]{2,15})/i);
+  if(m) return m[1].replace(/\./g,'');
+  return null;
+}
+
+async function extractTextFromPDF(file){
+  const buf = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({data: buf}).promise;
+  let full = '';
+  for(let i=1;i<=pdf.numPages;i++){
+    const page = await pdf.getPage(i);
+    const content = await page.getTextContent();
+    full += content.items.map(it=>it.str).join(' ') + '\n';
+  }
+  return full;
+}
+
+function openImportModal(){
+  importPreview = [];
+  const currentStore = STORE_KEYS.includes(state.activeTab) ? state.activeTab : STORE_KEYS[0];
+  document.getElementById('modalBody').outerHTML = `<div class="modal modal-lg" id="modalBody">
+    <p class="modal-title">Importar PDF (DANFE)</p>
+    <p class="modal-sub">Selecione um ou mais PDFs de nota fiscal (DANFE). O sistema tenta ler número da NF, data e valor automaticamente — você confere antes de importar.</p>
+    <label class="dropzone" id="dropzoneLabel">
+      <b>Clique para escolher os PDFs</b>
+      Pode selecionar vários arquivos de uma vez
+      <input type="file" id="pdfInput" accept="application/pdf" multiple style="display:none" onchange="handlePdfFiles(this.files, '${currentStore}')">
+    </label>
+    <div id="importStatus"></div>
+    <div class="modal-actions">
+      <button type="button" class="btn btn-ghost" onclick="closeModal()">Fechar</button>
+    </div>
+  </div>`;
+  document.getElementById('overlay').classList.add('open');
+}
+
+async function handlePdfFiles(fileList, currentStore){
+  const files = Array.from(fileList);
+  if(!files.length) return;
+  const statusEl = document.getElementById('importStatus');
+  statusEl.innerHTML = `<p class="muted" style="margin-top:16px;">Lendo ${files.length} arquivo(s)…</p>`;
+
+  for(const file of files){
+    try{
+      const text = await extractTextFromPDF(file);
+      const chave = decodeChave(text);
+      const lojaAuto = detectLoja(text);
+      const dataISO = guessDataEmissao(text, chave ? chave.anoMes : null);
+      const valor = guessValorTotal(text);
+      const nfNum = (chave && chave.nNF) || guessNfNumero(text);
+      importPreview.push({
+        _uid: uid(),
+        fileName: file.name,
+        loja: lojaAuto || currentStore,
+        lojaAuto: !!lojaAuto,
+        data: dataISO || todayISO(),
+        dataAuto: !!dataISO,
+        pedido: 'NF-e '+(nfNum||'?'),
+        nfNumero: nfNum || '',
+        nfAuto: !!nfNum,
+        valorFaturado: valor!=null ? valor.toFixed(2) : '',
+        valorAuto: valor!=null
+      });
+    }catch(e){
+      importPreview.push({
+        _uid: uid(), fileName: file.name, loja: currentStore, lojaAuto:false,
+        data: todayISO(), dataAuto:false, pedido:'NF-e (erro na leitura)', nfNumero:'', nfAuto:false,
+        valorFaturado:'', valorAuto:false, warn:'Não foi possível ler este PDF automaticamente. Preencha manualmente.'
+      });
+    }
+  }
+  renderImportPreview();
+}
+
+function renderImportPreview(){
+  const statusEl = document.getElementById('importStatus');
+  if(!importPreview.length){ statusEl.innerHTML=''; return; }
+  const rows = importPreview.map(r=>`
+    <tr>
+      <td class="muted" title="${esc(r.fileName)}">${esc(r.fileName.length>18?r.fileName.slice(0,16)+'…':r.fileName)}</td>
+      <td>
+        <select onchange="updatePreview('${r._uid}','loja',this.value)">
+          ${STORE_KEYS.map(c=>`<option value="${c}" ${r.loja===c?'selected':''}>${STORE_META[c].nome}</option>`).join('')}
+        </select>
+        ${r.lojaAuto?'<div class="badge-auto">detectado</div>':'<div class="badge-manual">confira</div>'}
+      </td>
+      <td><input type="date" value="${r.data}" onchange="updatePreview('${r._uid}','data',this.value)">
+        ${r.dataAuto?'<div class="badge-auto">lido do PDF</div>':'<div class="badge-manual">confira</div>'}
+      </td>
+      <td><input type="text" value="${esc(r.pedido)}" onchange="updatePreview('${r._uid}','pedido',this.value)"></td>
+      <td><input type="text" value="${esc(r.nfNumero)}" onchange="updatePreview('${r._uid}','nfNumero',this.value)">
+        ${r.nfAuto?'<div class="badge-auto">lido do PDF</div>':'<div class="badge-manual">confira</div>'}
+      </td>
+      <td><input type="number" step="0.01" value="${r.valorFaturado}" onchange="updatePreview('${r._uid}','valorFaturado',this.value)">
+        ${r.valorAuto?'<div class="badge-auto">lido do PDF</div>':'<div class="badge-manual">confira</div>'}
+      </td>
+      <td><button class="btn btn-danger btn-sm" onclick="removePreview('${r._uid}')">Remover</button></td>
+    </tr>
+    ${r.warn ? `<tr><td colspan="7" style="color:var(--red);font-size:11.5px;padding:0 8px 8px;">${esc(r.warn)}</td></tr>` : ''}
+  `).join('');
+
+  statusEl.innerHTML = `
+    <p class="import-note">${importPreview.length} nota(s) lida(s). Campos marcados "confira" não foram identificados com certeza — ajuste antes de importar. O valor do DAE será sugerido automaticamente em 16% do valor faturado.</p>
+    <div class="import-table-wrap">
+      <table class="import-table">
+        <thead><tr><th>Arquivo</th><th>Loja</th><th>Data</th><th>Pedido</th><th>Nº NF</th><th>Valor faturado</th><th></th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+    <div class="modal-actions">
+      <button type="button" class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
+      <button type="button" class="btn btn-primary" onclick="confirmImport()">Importar ${importPreview.length} nota(s)</button>
+    </div>`;
+}
+function updatePreview(uidVal, field, val){
+  const r = importPreview.find(x=>x._uid===uidVal);
+  if(r) r[field] = val;
+}
+function removePreview(uidVal){
+  importPreview = importPreview.filter(x=>x._uid!==uidVal);
+  renderImportPreview();
+  if(!importPreview.length) closeModal();
+}
+async function confirmImport(){
+  const touched = new Set();
+  importPreview.forEach(r=>{
+    const vf = parseFloat(r.valorFaturado)||0;
+    const record = {
+      id: uid(),
+      loja: r.loja,
+      data: r.data,
+      pedido: r.pedido.trim() || 'NF-e '+(r.nfNumero||'?'),
+      nfNumero: (r.nfNumero||'').trim(),
+      qt: null, valor: null, qtFaturado: null,
+      valorFaturado: vf,
+      valorDae: Number((vf*DAE_RATE).toFixed(2)),
+      vencimento: null,
+      previsaoEntrega: null,
+      recebimento: null,
+      observacoes: 'Importado de PDF (DANFE)',
+      status: 'pendente',
+      dataPagamento: null,
+      valorPago: null
+    };
+    state.pedidos[r.loja].push(record);
+    touched.add(r.loja);
+  });
+  for(const code of touched) await saveStore(code);
+  importPreview = [];
+  closeModal();
+  render();
+}
+
+
+// ---------- init ----------
+(function init(){
+  render();
+})();
+</script>
+</body>
+</html>
