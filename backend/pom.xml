@@ -43,6 +43,7 @@
     <dependency>
       <groupId>com.microsoft.sqlserver</groupId>
       <artifactId>mssql-jdbc</artifactId>
+      <version>12.6.2.jre11</version>
       <scope>runtime</scope>
     </dependency>
 
@@ -50,10 +51,17 @@
     <dependency>
       <groupId>org.postgresql</groupId>
       <artifactId>postgresql</artifactId>
+      <version>42.7.3</version>
       <scope>runtime</scope>
     </dependency>
 
-    <!-- Flyway para versionar o schema do banco -->
+    <!--
+      Flyway para versionar o schema do banco.
+      Observação: o suporte a PostgreSQL já vem embutido no flyway-core nesta
+      versão do Flyway (usada pelo Spring Boot 3.2.x) — por isso não precisa
+      de um módulo separado pra Postgres. Já o SQL Server precisa do módulo
+      "flyway-sqlserver" abaixo.
+    -->
     <dependency>
       <groupId>org.flywaydb</groupId>
       <artifactId>flyway-core</artifactId>
@@ -61,10 +69,6 @@
     <dependency>
       <groupId>org.flywaydb</groupId>
       <artifactId>flyway-sqlserver</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.flywaydb</groupId>
-      <artifactId>flyway-database-postgresql</artifactId>
     </dependency>
 
     <!-- JWT para autenticação por token -->
@@ -87,12 +91,6 @@
     </dependency>
 
     <dependency>
-      <groupId>org.projectlombok</groupId>
-      <artifactId>lombok</artifactId>
-      <optional>true</optional>
-    </dependency>
-
-    <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-test</artifactId>
       <scope>test</scope>
@@ -110,14 +108,6 @@
       <plugin>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-maven-plugin</artifactId>
-        <configuration>
-          <excludes>
-            <exclude>
-              <groupId>org.projectlombok</groupId>
-              <artifactId>lombok</artifactId>
-            </exclude>
-          </excludes>
-        </configuration>
       </plugin>
     </plugins>
   </build>
