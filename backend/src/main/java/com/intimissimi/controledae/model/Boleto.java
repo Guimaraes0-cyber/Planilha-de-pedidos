@@ -1,0 +1,37 @@
+package com.intimissimi.controledae.model;
+
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.NoArgsConstructor;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
+
+@Entity
+@Table(name = "boletos")
+@Getter
+@Setter
+@NoArgsConstructor
+public class Boleto {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 10)
+    private Loja loja;
+
+    private LocalDate data;
+
+    @Column(precision = 14, scale = 2)
+    private BigDecimal valorPago = BigDecimal.ZERO;
+
+    @OneToMany(mappedBy = "boleto", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    @JsonManagedReference
+    private List<BoletoNota> notas = new ArrayList<>();
+}

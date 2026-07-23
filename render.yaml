@@ -1,0 +1,71 @@
+# ============================================================
+# Blueprint do Render — define os 3 serviços de uma vez:
+# 1) banco de dados PostgreSQL
+# 2) backend (Spring Boot, via Docker)
+# 3) frontend (Vue, site estático)
+#
+# Como usar: no Render, "New +" → "Blueprint" → conecte este repositório
+# do GitHub → o Render lê este arquivo e cria tudo sozinho.
+# Veja o passo a passo completo em RENDER.md.
+# ============================================================
+
+databases:
+  - name: controle-dae-db
+    plan: free
+    databaseName: controle_dae
+    user: controle_dae_user
+
+services:
+  # ---------------- Backend (API) ----------------
+  - type: web
+    name: controle-dae-backend
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    plan: free
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: render
+      - key: DB_HOST
+        fromDatabase:
+          name: controle-dae-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: controle-dae-db
+          property: port
+      - key: DB_NAME
+        fromDatabase:
+          name: controle-dae-db
+          property: database
+      - key: DB_USER
+        fromDatabase:
+          name: controle-dae-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: controle-dae-db
+          property: password
+      - key: JWT_SECRET
+        generateValue: true
+      - key: ADMIN_USERNAME
+        value: admin
+      - key: ADMIN_SENHA_INICIAL
+        sync: false   # defina manualmente no painel do Render (não fica salvo aqui)
+
+  # ---------------- Frontend (site estático) ----------------
+  - type: web
+    name: controle-dae-frontend
+    runtime: static
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    staticPublishPath: ./dist
+    envVars:
+      - key: VITE_API_BASE_URL
+        # Preencha com a URL pública do backend depois do primeiro deploy
+        # (ex: https://controle-dae-backend.onrender.com/api) — veja RENDER.md.
+        sync: false
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
