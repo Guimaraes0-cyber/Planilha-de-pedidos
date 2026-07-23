@@ -1,0 +1,25 @@
+# ---------- Backend (Maven / Java) ----------
+backend/target/
+backend/**/*.class
+*.jar
+!deploy/*.jar
+
+# Se algum dia criarem um arquivo de configuração local com credenciais reais,
+# ele não deve ir pro Git:
+application-local.properties
+application-secrets.properties
+*.env
+.env
+
+# ---------- Frontend (Node / Vite) ----------
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+npm-debug.log*
+
+# ---------- IDEs / editores ----------
+.idea/
+.vscode/
+*.iml
+.DS_Store
+Thumbs.db

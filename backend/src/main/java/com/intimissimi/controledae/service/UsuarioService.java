@@ -1,4 +1,3 @@
-
 package com.intimissimi.controledae.service;
 
 import com.intimissimi.controledae.model.Role;

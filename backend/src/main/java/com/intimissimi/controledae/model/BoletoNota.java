@@ -2,11 +2,17 @@ package com.intimissimi.controledae.model;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 
 @Entity
 @Table(name = "boleto_notas")
+@Getter
+@Setter
+@NoArgsConstructor
 public class BoletoNota {
 
     @Id
@@ -23,16 +29,4 @@ public class BoletoNota {
 
     @Column(precision = 14, scale = 2)
     private BigDecimal valorDae = BigDecimal.ZERO;
-
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-
-    public Boleto getBoleto() { return boleto; }
-    public void setBoleto(Boleto boleto) { this.boleto = boleto; }
-
-    public String getNfNumero() { return nfNumero; }
-    public void setNfNumero(String nfNumero) { this.nfNumero = nfNumero; }
-
-    public BigDecimal getValorDae() { return valorDae; }
-    public void setValorDae(BigDecimal valorDae) { this.valorDae = valorDae; }
 }

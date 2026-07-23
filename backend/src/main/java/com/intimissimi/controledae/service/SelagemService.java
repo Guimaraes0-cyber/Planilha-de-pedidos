@@ -1,4 +1,3 @@
-
 package com.intimissimi.controledae.service;
 
 import com.intimissimi.controledae.model.Pedido;
@@ -27,6 +26,12 @@ public class SelagemService {
         return "Outros";
     }
 
+    /**
+     * Status de selagem de um pedido:
+     * - "aguardando"  -> ainda não foi pago
+     * - "ok"          -> pago e o valor bate com o esperado (16% do faturado)
+     * - "erro"        -> pago mas o valor não bate — precisa de selagem
+     */
     public String statusSelagem(Pedido p) {
         if (!"pago".equals(p.getStatus())) return "aguardando";
         BigDecimal esperado = p.getValorDae() != null ? p.getValorDae() : BigDecimal.ZERO;

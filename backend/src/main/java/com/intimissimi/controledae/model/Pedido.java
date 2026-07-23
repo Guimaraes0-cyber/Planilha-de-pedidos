@@ -1,12 +1,18 @@
 package com.intimissimi.controledae.model;
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Entity
 @Table(name = "pedidos")
+@Getter
+@Setter
+@NoArgsConstructor
 public class Pedido {
 
     @Id
@@ -20,7 +26,7 @@ public class Pedido {
     private LocalDate data;
 
     @Column(length = 255)
-    private String pedido;
+    private String pedido; // descrição / tipo (Ressuprimento, Brinde, Tranche, Sem pedido de venda...)
 
     @Column(length = 40)
     private String nfNumero;
@@ -34,14 +40,14 @@ public class Pedido {
 
     private LocalDate previsaoEntrega;
     private LocalDate recebimento;
-    private LocalDate vencimento;
-    private LocalDate vencimentoFornecedor;
+    private LocalDate vencimento;              // vencimento do DAE
+    private LocalDate vencimentoFornecedor;    // vencimento do pagamento à Calzedonia (fornecedor)
 
     @Column(precision = 14, scale = 2)
-    private BigDecimal valorDae = BigDecimal.ZERO;
+    private BigDecimal valorDae = BigDecimal.ZERO; // esperado (16% do valor faturado)
 
     @Column(length = 20)
-    private String status = "pendente";
+    private String status = "pendente"; // pendente | pago
 
     private LocalDate dataPagamento;
 
@@ -50,58 +56,4 @@ public class Pedido {
 
     @Column(length = 500)
     private String observacoes;
-
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-
-    public Loja getLoja() { return loja; }
-    public void setLoja(Loja loja) { this.loja = loja; }
-
-    public LocalDate getData() { return data; }
-    public void setData(LocalDate data) { this.data = data; }
-
-    public String getPedido() { return pedido; }
-    public void setPedido(String pedido) { this.pedido = pedido; }
-
-    public String getNfNumero() { return nfNumero; }
-    public void setNfNumero(String nfNumero) { this.nfNumero = nfNumero; }
-
-    public Integer getQt() { return qt; }
-    public void setQt(Integer qt) { this.qt = qt; }
-
-    public BigDecimal getValor() { return valor; }
-    public void setValor(BigDecimal valor) { this.valor = valor; }
-
-    public Integer getQtFaturado() { return qtFaturado; }
-    public void setQtFaturado(Integer qtFaturado) { this.qtFaturado = qtFaturado; }
-
-    public BigDecimal getValorFaturado() { return valorFaturado; }
-    public void setValorFaturado(BigDecimal valorFaturado) { this.valorFaturado = valorFaturado; }
-
-    public LocalDate getPrevisaoEntrega() { return previsaoEntrega; }
-    public void setPrevisaoEntrega(LocalDate previsaoEntrega) { this.previsaoEntrega = previsaoEntrega; }
-
-    public LocalDate getRecebimento() { return recebimento; }
-    public void setRecebimento(LocalDate recebimento) { this.recebimento = recebimento; }
-
-    public LocalDate getVencimento() { return vencimento; }
-    public void setVencimento(LocalDate vencimento) { this.vencimento = vencimento; }
-
-    public LocalDate getVencimentoFornecedor() { return vencimentoFornecedor; }
-    public void setVencimentoFornecedor(LocalDate vencimentoFornecedor) { this.vencimentoFornecedor = vencimentoFornecedor; }
-
-    public BigDecimal getValorDae() { return valorDae; }
-    public void setValorDae(BigDecimal valorDae) { this.valorDae = valorDae; }
-
-    public String getStatus() { return status; }
-    public void setStatus(String status) { this.status = status; }
-
-    public LocalDate getDataPagamento() { return dataPagamento; }
-    public void setDataPagamento(LocalDate dataPagamento) { this.dataPagamento = dataPagamento; }
-
-    public BigDecimal getValorPago() { return valorPago; }
-    public void setValorPago(BigDecimal valorPago) { this.valorPago = valorPago; }
-
-    public String getObservacoes() { return observacoes; }
-    public void setObservacoes(String observacoes) { this.observacoes = observacoes; }
 }
