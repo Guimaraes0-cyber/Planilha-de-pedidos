@@ -22,12 +22,13 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@Valid @RequestBody AuthDtos.LoginRequest req) {
-        return usuarioService.autenticar(req.username, req.senha)
-                .map(u -> {
-                    String token = jwtUtil.gerarToken(u.getUsername(), u.getRole().name());
-                    return ResponseEntity.ok(new AuthDtos.LoginResponse(token, u.getUsername(), u.getRole().name()));
-                })
-                .orElseGet(() -> ResponseEntity.status(401).body("Usuário ou senha incorretos."));
+        var usuarioOpt = usuarioService.autenticar(req.username, req.senha);
+        if (usuarioOpt.isPresent()) {
+            Usuario u = usuarioOpt.get();
+            String token = jwtUtil.gerarToken(u.getUsername(), u.getRole().name());
+            return ResponseEntity.ok(new AuthDtos.LoginResponse(token, u.getUsername(), u.getRole().name()));
+        }
+        return ResponseEntity.status(401).body("Usuário ou senha incorretos.");
     }
 
     @PostMapping("/trocar-senha")
